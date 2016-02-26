@@ -34,6 +34,35 @@ class Emphasis(unittest.TestCase):
 		"""_emphasis should ensure that double asterisks are not interpreted as two single ones"""
 		result = MarkdownToLatex()._emphasise("**bolded**")
 		self.assertNotEqual(result, "\emph{\emph{bolded}}")
+		
+class Headings(unittest.TestCase):
+	def testChapterHeading(self):
+		tests = [("Chapter\n====", "\chapter{Chapter}"), ("Example\n=", "\chapter{Example}")]
+		"""_headings should process a line of text followed by 1+ = on the next line as a chapter heading"""
+		for test, result in tests:
+			self.assertEqual(MarkdownToLatex()._headings(test), result)
+	
+	def testSectionHeading(self):
+		tests = [("Section\n-----", "\section{Section}"), ("Example\n-", "\section{Example}")]
+		"""_headings should process a line of text followed by 1+ - on the next line as a section heading"""
+		for test, result in tests:
+			self.assertEqual(MarkdownToLatex()._headings(test), result)
+			
+	def testAtxHeadings(self):
+		tests = [("# Chapter", "\chapter{Chapter}"), ("## Section", "\section{Section}"), ("### Subsection", "\subsection{Subsection}"), ("#### Subsubsection", "\subsubsection{Subsubsection}")]
+		"""_headings should process a line of text prefaced with any number of # (up to 4) and generate the appropriate heading according to this number"""
+		for test, result in tests:
+			self.assertEqual(MarkdownToLatex()._headings(test), result)
+			
+	def testAtxHeadingsTooManyHashes(self):
+		"""_headings should process a line with more than 4 # as if it had only 4"""
+		result = MarkdownToLatex()._headings("######### Example")
+		self.assertEqual(result, "\subsubsection{Example}")
+	
+	def testAtxHeadingsTrailingHash(self):
+		"""_headings should remove any number of trailing # from atx style headings when processing"""
+		result = MarkdownToLatex()._headings("### Example ####")
+		self.assertEqual(result, "\subsection{Example}")
 	
 if __name__ == "__main__":
 	unittest.main()
