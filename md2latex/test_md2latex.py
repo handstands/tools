@@ -54,6 +54,12 @@ class Headings(unittest.TestCase):
 		for test, result in tests:
 			self.assertEqual(MarkdownToLatex()._headings(test), result)
 			
+	def testSectionHeadingSpillover(self):
+		"""_headings should not accidentally convert unordered list items prefixed with - into section headings"""
+		test = "* Test\n- Example"
+		result = MarkdownToLatex()._headings(test)
+		self.assertEquals(result, test)
+		
 	def testAtxHeadings(self):
 		tests = [("# Chapter", "\chapter{Chapter}"), ("## Section", "\section{Section}"), ("### Subsection", "\subsection{Subsection}"), ("#### Subsubsection", "\subsubsection{Subsubsection}")]
 		"""_headings should process a line of text prefaced with any number of # (up to 4) and generate the appropriate heading according to this number"""

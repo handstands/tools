@@ -33,7 +33,7 @@ class MarkdownToLatex:
 		self.emph = re.compile('\*(.+?)\*')
 		self.bold = re.compile('\*\*(.+?)\*\*')
 		self.chapter = re.compile('(.+)\n=+', re.MULTILINE)
-		self.section = re.compile('(.+)\n\-+', re.MULTILINE)
+		self.section = re.compile('(.+)\n\-+$', re.MULTILINE)
 		self.atx = re.compile('(#+)(.+)')
 		self.ul = re.compile('([\+\-\*])\s+(.+)')
 		self.ol = re.compile('([0-9]+[0-9]*)\.\s+(.+)')
@@ -76,12 +76,15 @@ class MarkdownToLatex:
 		if active_list:
 			result.append(end[active_list])
 		return '\n'.join(result)
+	
+	def markdownify(self, text):
+		text = self._headings(text)
+		text = self._lists(text)
+		text = self._emphasise(text)
+		return text
 		
 if __name__ == "__main__":
-	print MarkdownToLatex()._headings("Test\n====")
-	print MarkdownToLatex()._headings("Test\n----")
-	print MarkdownToLatex()._headings("##### Test #####")
-	print MarkdownToLatex()._emphasise("*a* *b* **c** **d**")
-	print MarkdownToLatex()._emphasise("Like fucking *emphasise* this un**fucking**believable\n*story*")
-	print MarkdownToLatex()._lists("* abc\n * fde\n * ijk")
-	print MarkdownToLatex()._lists("1. abc\n 2. fde\n 3. ijk\n\n* foo\n* bar\n* baz")
+	f = open('example.md')
+	d = f.read()
+	f.close()
+	print MarkdownToLatex().markdownify(d)
