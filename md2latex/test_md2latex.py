@@ -113,6 +113,18 @@ class Lists(unittest.TestCase):
 		("* Beer\n* Cars\n3. Boats", "\\begin{itemize}\n\item Beer\n\item Cars\n\item Boats\n\end{itemize}")]
 		for test, result in tests:
 			self.assertEquals(MarkdownToLatex()._lists(test), result)
+
+class Footnotes(unittest.TestCase):
+	def testFootnote(self):
+		"""_footnote should convert the text between ^( ... ) into footnotes"""
+		result = MarkdownToLatex()._footnotes("^(A test footnote)")
+		self.assertEquals(result, "\\footnote{A test footnote}")
+		
+	def testFootnotePassthrough(self):
+		"""_footnote should leave strings without footnotes in them as is"""
+		test = "Footnote-less text"
+		result = MarkdownToLatex()._footnotes(test)
+		self.assertEquals(result, test)
 		
 if __name__ == "__main__":
 	unittest.main()

@@ -27,6 +27,9 @@ def _atx(m):
 
 def _ul(m):
 	return "\item " + m.group(2).strip()
+	
+def _footnote(m):
+	return "\\footnote{" + m.group(1) + "}"
 
 class MarkdownToLatex:
 	def __init__(self):
@@ -37,6 +40,7 @@ class MarkdownToLatex:
 		self.atx = re.compile('(#+)(.+)')
 		self.ul = re.compile('([\+\-\*])\s+(.+)')
 		self.ol = re.compile('([0-9]+[0-9]*)\.\s+(.+)')
+		self.footnote = re.compile('\^\((.+)\)')
 		
 	def _emphasise(self, text):
 		text = self.bold.sub(_bold, text)
@@ -77,9 +81,14 @@ class MarkdownToLatex:
 			result.append(end[active_list])
 		return '\n'.join(result)
 	
+	def _footnotes(self, text):
+		text = self.footnote.sub(_footnote, text)
+		return text
+	
 	def markdownify(self, text):
 		text = self._headings(text)
 		text = self._lists(text)
+		text = self._footnotes(text)
 		text = self._emphasise(text)
 		return text
 		
