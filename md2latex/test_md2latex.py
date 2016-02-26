@@ -69,6 +69,44 @@ class Headings(unittest.TestCase):
 		"""_headings should remove any number of trailing # from atx style headings when processing"""
 		result = MarkdownToLatex()._headings("### Example ####")
 		self.assertEqual(result, "\subsection{Example}")
-	
+
+class Lists(unittest.TestCase):
+	def testUnmixedList(self):
+		"""_lists should return a properly formatted list"""
+		tests = [("* a\n* b\n* c", "\\begin{itemize}\n\item a\n\item b\n\item c\n\end{itemize}"), 
+		("- a\n- b\n- c", "\\begin{itemize}\n\item a\n\item b\n\item c\n\end{itemize}"),
+		("+ a\n+ b\n+ c", "\\begin{itemize}\n\item a\n\item b\n\item c\n\end{itemize}")]
+		for test, result in tests:
+			self.assertEqual(MarkdownToLatex()._lists(test), result)
+			
+	def testMixedUnorderedList(self):
+		"""_lists should return a properly formatted list even if the prefixes are mixed"""
+		tests = [("* a\n- b\n+ c", "\\begin{itemize}\n\item a\n\item b\n\item c\n\end{itemize}"), 
+		("+ a\n* b\n- c", "\\begin{itemize}\n\item a\n\item b\n\item c\n\end{itemize}"),
+		("- a\n+ b\n+ c", "\\begin{itemize}\n\item a\n\item b\n\item c\n\end{itemize}")]
+		for test, result in tests:
+			self.assertEqual(MarkdownToLatex()._lists(test), result)
+			
+	def testOrderedList(self):
+		"""_lists should return a properly formatted ordered list"""
+		tests = [('1. Beer\n2. Cars\n3. Boats', "\\begin{enumerate}\n\item Beer\n\item Cars\n\item Boats\n\end{enumerate}"),
+		('2367. Beer\n12321. Cars\n5. Boats', "\\begin{enumerate}\n\item Beer\n\item Cars\n\item Boats\n\end{enumerate}"),
+		('1. Beer\n1. Cars\n1. Boats', "\\begin{enumerate}\n\item Beer\n\item Cars\n\item Boats\n\end{enumerate}")]
+		for test, result in tests:
+			self.assertEquals(MarkdownToLatex()._lists(test), result)
+		
+	def testDontTouchNonLists(self):
+		"""_lists should not do anything to anything that isn't a list"""
+		test = "Definitely not a list."
+		result = MarkdownToLatex()._lists(test)
+		self.assertEquals(result, test)
+		
+	def testMingledLists(self):
+		"""_lists should take the first item of a list as a guide to which type to use even if ordered and unordered lists are mixed together"""
+		tests = [("1. Beer\n* Cars\n3. Boats", "\\begin{enumerate}\n\item Beer\n\item Cars\n\item Boats\n\end{enumerate}"),
+		("* Beer\n* Cars\n3. Boats", "\\begin{itemize}\n\item Beer\n\item Cars\n\item Boats\n\end{itemize}")]
+		for test, result in tests:
+			self.assertEquals(MarkdownToLatex()._lists(test), result)
+		
 if __name__ == "__main__":
 	unittest.main()
