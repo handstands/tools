@@ -27,20 +27,16 @@ def _atx(m):
 
 class MarkdownToLatex:
 	def __init__(self):
-		self.emph = re.compile('\*(.+)\*')
-		self.bold = re.compile('\*\*(.+)\*\*')
+		self.emph = re.compile('\*(.+?)\*')
+		self.bold = re.compile('\*\*(.+?)\*\*')
 		self.chapter = re.compile('(.+)\n=+', re.MULTILINE)
 		self.section = re.compile('(.+)\n\-+', re.MULTILINE)
 		self.atx = re.compile('(#+)(.+)')
 		
 	def _emphasise(self, text):
-		lines = text.splitlines()
-		result = []
-		for line in lines:
-			line = self.bold.sub(_bold, line)
-			line = self.emph.sub(_emph, line)
-			result.append(line)
-		return '\n'.join(result)
+		text = self.bold.sub(_bold, text)
+		text = self.emph.sub(_emph, text)
+		return text
 	
 	def _headings(self, text):
 		text = self.chapter.sub(_chapter, text)
@@ -52,3 +48,5 @@ if __name__ == "__main__":
 	print MarkdownToLatex()._headings("Test\n====")
 	print MarkdownToLatex()._headings("Test\n----")
 	print MarkdownToLatex()._headings("##### Test #####")
+	print MarkdownToLatex()._emphasise("*a* *b* **c** **d**")
+	print MarkdownToLatex()._emphasise("Like fucking *emphasise* this un**fucking**believable\n*story*")

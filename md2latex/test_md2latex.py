@@ -29,6 +29,12 @@ class Emphasis(unittest.TestCase):
 		"""_emphasise should bold text between double asterisks"""
 		result = MarkdownToLatex()._emphasise("**bolded**")
 		self.assertEqual(result, "\strong{bolded}")
+	
+	def testMultipleEmphasised(self):
+		tests = [("*a* *b*", "\emph{a} \emph{b}"), ("**a** **b**", "\strong{a} \strong{b}"), ("*a* **b**", "\emph{a} \strong{b}"), ("**a** *b*", "\strong{a} \emph{b}")]
+		"""_emphasise should emphasise multiple emphasised word in a single line correctly"""
+		for test, result in tests:
+			self.assertEqual(MarkdownToLatex()._emphasise(test), result)
 		
 	def testUngreedySingleEmphasis(self):
 		"""_emphasis should ensure that double asterisks are not interpreted as two single ones"""
