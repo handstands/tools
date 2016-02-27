@@ -1,15 +1,9 @@
 #!/usr/bin/env python
 import re
 
-def _chapter(m):
-	return "\chapter{" + m.group(1).strip() + "}"
-	
-def _section(m):
-	return "\section{" + m.group(1).strip() + "}"
-	
 def _atx(m):
-	heading_level = len(m.group(1))
-	title = m.group(2).replace('#', '').strip()
+	heading_level = len(m.group('hashes'))
+	title = m.group('title').replace('#', '').strip()
 	if heading_level == 1:
 		return "\chapter{" + title + "}"
 	elif heading_level == 2:
@@ -19,12 +13,6 @@ def _atx(m):
 	else:
 		return "\subsubsection{" + title + "}"
 
-def _ul(m):
-	return "\item " + m.group(2).strip()
-	
-def _footnote(m):
-	return "\\footnote{" + m.group(1) + "}"
-
 def _inline_image(m):
 	result = '\\begin{figure}\n'
 	result += '\includegraphics{%s}\n' % m.group('address')
@@ -33,34 +21,31 @@ def _inline_image(m):
 	result += '\end{figure}'
 	return result
 	
-def _inline_link(m):
-	return '\href{%s}{%s}' % (m.group('address'), m.group('alt'))
-
 class MarkdownToLatex:
 	def __init__(self):
-		self.emph = re.compile(r'(:?[\*_])(.+?)\1')
-		self.bold = re.compile(r'(:?[\*_]{2})(.+?)\1')
-		self.monospace = re.compile('`(.+?)`')
-		self.chapter = re.compile('(.+)\n=+', re.MULTILINE)
-		self.section = re.compile('(.+)\n\-+$', re.MULTILINE)
-		self.atx = re.compile('(#+)(.+)')
-		self.ul = re.compile('([\+\-\*])\s+(.+)')
-		self.ol = re.compile('([0-9]+[0-9]*)\.\s+(.+)')
-		self.footnote = re.compile('\^\((.+)\)')
-		self.citation = re.compile('\[(\S+?)\]:\s+"(.+?)"\s+"(.+?)"\s+"(.+?)"')
-		self.url = re.compile('\[(\S+?)\]:\s+\<?(\S+?)\>?\s+"(.+?)"')
+		self.emph = re.compile(r'(:?[\*_])(?P<text>.+?)\1')
+		self.bold = re.compile(r'(:?[\*_]{2})(?P<text>.+?)\1')
+		self.monospace = re.compile('`(?P<text>.+?)`')
+		self.chapter = re.compile('(?P<title>.+)\n=+', re.MULTILINE)
+		self.section = re.compile('(?P<title>.+)\n\-+$', re.MULTILINE)
+		self.atx = re.compile('(?P<hashes>#+)(?P<title>.+)')
+		self.ul = re.compile('([\+\-\*])\s+(?P<text>.+)')
+		self.ol = re.compile('([1-9]+[0-9]*)\.\s+(?P<text>.+)')
+		self.footnote = re.compile('\^\((?P<text>.+)\)')
+		self.citation = re.compile('\[(?P<ref>\S+?)\]:\s+"(?P<bib>.+?)"\s+"(?P<long>.+?)"\s+"(?P<short>.+?)"')
+		self.url = re.compile('\[(?P<ref>\S+?)\]:\s+\<?(?P<url>\S+?)\>?\s+"(?P<desc>.+?)"')
 		self.inline_reference = re.compile('(?P<image>\!)?\[(?P<alt>.+?)\]\s*\((?P<address>.+?)\s*(?:"(?P<title>.+?)")?\)')
 		self.reference = re.compile('(?P<type>[\^\!])?\[(?P<ref>.+?)\]\[(?P<id>.*?)\]')
 		
 	def _emphasise(self, text):
-		text = self.bold.sub(lambda m: "\strong{%s}" % m.group(2), text)
-		text = self.emph.sub(lambda m: "\emph{%s}" % m.group(2), text)
-		text = self.monospace.sub(lambda m: "\\texttt{%s}" % m.group(1), text)
+		text = self.bold.sub(lambda m: "\strong{%s}" % m.group('text'), text)
+		text = self.emph.sub(lambda m: "\emph{%s}" % m.group('text'), text)
+		text = self.monospace.sub(lambda m: "\\texttt{%s}" % m.group('text'), text)
 		return text
 	
 	def _headings(self, text):
-		text = self.chapter.sub(_chapter, text)
-		text = self.section.sub(_section, text)
+		text = self.chapter.sub(lambda m: "\chapter{%s}" % m.group('title').strip(), text)
+		text = self.section.sub(lambda m: "\section{%s}" % m.group('title').strip(), text)
 		text = self.atx.sub(_atx, text)
 		return text
 		
@@ -80,9 +65,9 @@ class MarkdownToLatex:
 						active_list = 'ordered'
 					result.append(begin[active_list])
 				if unordered:
-					result.append(self.ul.sub(_ul, line))
+					result.append(self.ul.sub(lambda m: "\item %s" % m.group('text').strip(), line))
 				elif ordered:
-					result.append(self.ol.sub(_ul, line))
+					result.append(self.ol.sub(lambda m: "\item %s" % m.group('text').strip(), line))
 			else:
 				if active_list:
 					result.append(end[active_list])
@@ -93,7 +78,7 @@ class MarkdownToLatex:
 		return '\n'.join(result)
 	
 	def _footnotes(self, text):
-		text = self.footnote.sub(_footnote, text)
+		text = self.footnote.sub(lambda m: "\\footnote{%s}" % m.group('text'), text)
 		return text
 		
 	def _references(self, text):
@@ -106,22 +91,20 @@ class MarkdownToLatex:
 			url = self.url.search(line)
 			inline_reference = self.inline_reference.search(line)
 			if citation:
-				key, bib, long_entry, short_entry = citation.groups()
-				if key in bibliography.keys():
-					raise KeyError, "Duplicate key '%s'" % key
-				bibliography[key] = (bib, long_entry, short_entry)
+				if citation.group('ref') in bibliography.keys():
+					raise KeyError, "Duplicate key '%s'" % citation.group('ref')
+				bibliography[citation.group('ref')] = {'bib': citation.group('bib'), 'long': citation.group('long'), 'short': citation.group('short')}
 				line = self.citation.sub("", line)
 			elif url:
-				key, adress, link_text = url.groups()
-				if key in urls.keys():
-					raise KeyError, "Duplicate key '%s'" % key
-				urls[key] = (adress, link_text)
+				if url.group('ref') in urls.keys():
+					raise KeyError, "Duplicate key '%s'" % url.group('ref')
+				urls[url.group('ref')] = (url.group('url'), url.group('desc'))
 				line = self.url.sub("", line)
 			elif inline_reference:
 				if inline_reference.group('image'):
 					line = self.inline_reference.sub(_inline_image, line)
 				else:
-					line = self.inline_reference.sub(_inline_link, line)
+					line = self.inline_reference.sub(lambda m: '\href{%s}{%s}' % (m.group('address'), m.group('alt')), line)
 			lines.append(line)
 		result = []
 		bib_tags = []
@@ -139,19 +122,13 @@ class MarkdownToLatex:
 						if reference.group('id'):
 							if reference.group('id') not in ('long', 'short', 'bib'):
 								raise KeyError, "erroneus key '%s'" % reference.group('id')
-							elif reference.group('id') == 'long':
-								key = 1
-							elif reference.group('id') == 'short':
-								key = 2
-							elif reference.group('id') == 'bib':
-								key = 0
-							line = self.reference.sub(bibliography[reference.group('ref')][key], line)
+							line = self.reference.sub(bibliography[reference.group('ref')][reference.group('id')], line)
 						else:
 							if reference.group('ref') not in bib_tags:
 								bib_tags.append(reference.group('ref'))
-								key = 1
+								key = 'long'
 							else:
-								key = 2
+								key = 'short'
 							line = self.reference.sub(bibliography[reference.group('ref')][key], line)
 				else:
 					if reference.group('ref') not in urls.keys():
@@ -172,6 +149,4 @@ if __name__ == "__main__":
 	f = open('example.md')
 	d = f.read()
 	f.close()
-	print MarkdownToLatex()._emphasise("*emph*")
-	print MarkdownToLatex()._emphasise("_emph_")
-	#print MarkdownToLatex().markdownify(d)
+	print MarkdownToLatex().markdownify(d)
