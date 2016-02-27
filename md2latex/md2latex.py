@@ -1,12 +1,6 @@
 #!/usr/bin/env python
 import re
 
-def _emph(m):
-	return "\emph{" + m.group(1) + "}"
-	
-def _bold(m):
-	return "\strong{" + m.group(1) + "}"
-	
 def _chapter(m):
 	return "\chapter{" + m.group(1).strip() + "}"
 	
@@ -44,8 +38,9 @@ def _inline_link(m):
 
 class MarkdownToLatex:
 	def __init__(self):
-		self.emph = re.compile('\*(.+?)\*')
-		self.bold = re.compile('\*\*(.+?)\*\*')
+		self.emph = re.compile(r'(:?[\*_])(.+?)\1')
+		self.bold = re.compile(r'(:?[\*_]{2})(.+?)\1')
+		self.monospace = re.compile('`(.+?)`')
 		self.chapter = re.compile('(.+)\n=+', re.MULTILINE)
 		self.section = re.compile('(.+)\n\-+$', re.MULTILINE)
 		self.atx = re.compile('(#+)(.+)')
@@ -58,8 +53,9 @@ class MarkdownToLatex:
 		self.reference = re.compile('(?P<type>[\^\!])?\[(?P<ref>.+?)\]\[(?P<id>.*?)\]')
 		
 	def _emphasise(self, text):
-		text = self.bold.sub(_bold, text)
-		text = self.emph.sub(_emph, text)
+		text = self.bold.sub(lambda m: "\strong{%s}" % m.group(2), text)
+		text = self.emph.sub(lambda m: "\emph{%s}" % m.group(2), text)
+		text = self.monospace.sub(lambda m: "\\texttt{%s}" % m.group(1), text)
 		return text
 	
 	def _headings(self, text):
@@ -176,4 +172,6 @@ if __name__ == "__main__":
 	f = open('example.md')
 	d = f.read()
 	f.close()
-	print MarkdownToLatex().markdownify(d)
+	print MarkdownToLatex()._emphasise("*emph*")
+	print MarkdownToLatex()._emphasise("_emph_")
+	#print MarkdownToLatex().markdownify(d)

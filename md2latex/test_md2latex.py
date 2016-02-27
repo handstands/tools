@@ -4,9 +4,10 @@ import unittest
 
 class Emphasis(unittest.TestCase):
 	def testBasicEmphasis(self):
-		"""_emphasise should emphasise strings between two *"""
-		result = MarkdownToLatex()._emphasise("*emphasis*")
-		self.assertEqual(result, "\emph{emphasis}")
+		"""_emphasise should emphasise strings between two * or two _"""
+		tests = [("*emphasis*", "\emph{emphasis}"), ("_emphasis_", "\emph{emphasis}")]
+		for test, result in tests:
+			self.assertEqual(MarkdownToLatex()._emphasise(test), result)
 		
 	def testEscapedAsterisks(self):
 		"""_emphasise should not emphasise if the asterisk is escaped"""
@@ -26,9 +27,10 @@ class Emphasis(unittest.TestCase):
 		self.assertEqual(resultb, "**not bolded")
 		
 	def testDoubleEmphasis(self):
-		"""_emphasise should bold text between double asterisks"""
-		result = MarkdownToLatex()._emphasise("**bolded**")
-		self.assertEqual(result, "\strong{bolded}")
+		"""_emphasise should bold text between double * or double __"""
+		tests = [("**bolded**", "\strong{bolded}"), ('__bolded__', "\strong{bolded}")]
+		for test, result in tests:
+			self.assertEqual(MarkdownToLatex()._emphasise(test), result)
 	
 	def testMultipleEmphasised(self):
 		tests = [("*a* *b*", "\emph{a} \emph{b}"), ("**a** **b**", "\strong{a} \strong{b}"), ("*a* **b**", "\emph{a} \strong{b}"), ("**a** *b*", "\strong{a} \emph{b}")]
@@ -37,9 +39,14 @@ class Emphasis(unittest.TestCase):
 			self.assertEqual(MarkdownToLatex()._emphasise(test), result)
 		
 	def testUngreedySingleEmphasis(self):
-		"""_emphasis should ensure that double asterisks are not interpreted as two single ones"""
+		"""_emphasise should ensure that double asterisks are not interpreted as two single ones"""
 		result = MarkdownToLatex()._emphasise("**bolded**")
 		self.assertNotEqual(result, "\emph{\emph{bolded}}")
+		
+	def testMonospacing(self):
+		"""_emphasise should render text between two ` as monospace"""
+		result = MarkdownToLatex()._emphasise("`monospace`")
+		self.assertEqual(result, "\\texttt{monospace}")
 		
 class Headings(unittest.TestCase):
 	def testChapterHeading(self):
