@@ -26,6 +26,8 @@ Ordered lists work similarly:
 3. Thirdly
 The actual numbers are disregarded however.
 
+Text between one asterisk or underscore will be *emphasised* _like_ *this*. Between two it will be **bolded** like __this__. Text encapsulated between two backticks will be rendered in a `monospace` font like `this`.
+
 Unlike regular Markdown, footnotes are supported also^(this will be a footnote!).
 
 Inline use of images is also supported: ![test](/test/test.jpg "A Test image"). That is as long as the requisite `graphicx` package is include when rendering the outputted LaTeX. Due to the nature of it's intended output, the script disregards the Alt Text attribute. If an optional title is set, it will be processed and included as a caption. Reference-style images are supported as well. Define them somewhere in the document and include them with the usual syntax ![test_image][] and it'll work just like the other way of including them.

@@ -120,6 +120,11 @@ class Lists(unittest.TestCase):
 		("* Beer\n* Cars\n3. Boats", "\\begin{itemize}\n\item Beer\n\item Cars\n\item Boats\n\end{itemize}")]
 		for test, result in tests:
 			self.assertEquals(MarkdownToLatex()._lists(test), result)
+			
+	def testNotLists(self):
+		"""_lists should not gobble up asteriskses used for emphasis"""
+		result = MarkdownToLatex()._lists('*test*')
+		self.assertNotEqual(result, "\item test*")
 
 class Footnotes(unittest.TestCase):
 	def testFootnote(self):
