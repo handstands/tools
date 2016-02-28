@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import re
 
 def _atx(m):
@@ -21,10 +21,18 @@ def _inline_image(m):
 	result += '\end{figure}'
 	return result
 	
+def _emph(m):
+	if m.group('type')[0] == '\\':
+		return m.group(1) + m.group('text') + m.group(1)
+	else:
+		if len(m.group(1)) == 1:
+			return "\emph{%s}" % m.group('text')
+		else:
+			return "\strong{%s}" % m.group('text')
+
 class MarkdownToLatex:
 	def __init__(self):
-		self.emph = re.compile(r'(:?[\*_])(?P<text>.+?)\1')
-		self.bold = re.compile(r'(:?[\*_]{2})(?P<text>.+?)\1')
+		self.emph = re.compile(r'((?P<type>(?P<escape>\\?)[\*_]){1,2})(?P<text>.+?)\1')
 		self.monospace = re.compile('`(?P<text>.+?)`')
 		self.chapter = re.compile('(?P<title>.+)\n=+', re.MULTILINE)
 		self.section = re.compile('(?P<title>.+)\n\-+$', re.MULTILINE)
@@ -38,8 +46,7 @@ class MarkdownToLatex:
 		self.reference = re.compile('(?P<type>[\^\!])?\[(?P<ref>.+?)\]\[(?P<id>.*?)\]')
 		
 	def _emphasise(self, text):
-		text = self.bold.sub(lambda m: "\strong{%s}" % m.group('text'), text)
-		text = self.emph.sub(lambda m: "\emph{%s}" % m.group('text'), text)
+		text = self.emph.sub(_emph, text)
 		text = self.monospace.sub(lambda m: "\\texttt{%s}" % m.group('text'), text)
 		return text
 	
@@ -92,12 +99,12 @@ class MarkdownToLatex:
 			inline_reference = self.inline_reference.search(line)
 			if citation:
 				if citation.group('ref') in bibliography.keys():
-					raise KeyError, "Duplicate key '%s'" % citation.group('ref')
+					raise KeyError("Duplicate key '%s'" % citation.group('ref'))
 				bibliography[citation.group('ref')] = {'bib': citation.group('bib'), 'long': citation.group('long'), 'short': citation.group('short')}
 				line = self.citation.sub("", line)
 			elif url:
 				if url.group('ref') in urls.keys():
-					raise KeyError, "Duplicate key '%s'" % url.group('ref')
+					raise KeyError("Duplicate key '%s'" % url.group('ref'))
 				urls[url.group('ref')] = (url.group('url'), url.group('desc'))
 				line = self.url.sub("", line)
 			elif inline_reference:
@@ -114,14 +121,14 @@ class MarkdownToLatex:
 				if reference.group('type'):
 					if reference.group('type') == '!':
 						if reference.group('ref') not in urls.keys():
-							raise KeyError, "reference '%s' undefined" % reference.group('ref')
-						line = self.reference.sub(r'\\begin{figure}\n\includegraphics{%s}\n\caption{%s}\n\end{figure}' % urls[reference.group('ref')], line)
+							raise KeyError("reference '%s' undefined" % reference.group('ref'))
+						line = self.reference.sub(r'\\begin{figure}\n\\includegraphics{%s}\n\\caption{%s}\n\\end{figure}' % urls[reference.group('ref')], line)
 					elif reference.group('type') == '^':
 						if reference.group('ref') not in bibliography.keys():
-							raise KeyError, "reference '%s' undefined" % reference.group('ref')
+							raise KeyError("reference '%s' undefined" % reference.group('ref'))
 						if reference.group('id'):
 							if reference.group('id') not in ('long', 'short', 'bib'):
-								raise KeyError, "erroneus key '%s'" % reference.group('id')
+								raise KeyError("erroneus key '%s'" % reference.group('id'))
 							line = self.reference.sub(bibliography[reference.group('ref')][reference.group('id')], line)
 						else:
 							if reference.group('ref') not in bib_tags:
@@ -132,8 +139,8 @@ class MarkdownToLatex:
 							line = self.reference.sub(bibliography[reference.group('ref')][key], line)
 				else:
 					if reference.group('ref') not in urls.keys():
-						raise KeyError, "reference '%s' undefined" % reference.group('ref')
-					line = self.reference.sub("\href{%s}{%s}" % urls[reference.group('ref')] , line)
+						raise KeyError("reference '%s' undefined" % reference.group('ref'))
+					line = self.reference.sub(r"\\href{%s}{%s}" % urls[reference.group('ref')] , line)
 			result.append(line)
 		return '\n'.join(result)
 	
@@ -149,4 +156,4 @@ if __name__ == "__main__":
 	f = open('example.md')
 	d = f.read()
 	f.close()
-	print MarkdownToLatex().markdownify(d)
+	print(MarkdownToLatex().markdownify(d))
