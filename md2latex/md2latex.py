@@ -21,18 +21,10 @@ def _inline_image(m):
 	result += '\end{figure}'
 	return result
 	
-def _emph(m):
-	if m.group('type')[0] == '\\':
-		return m.group(1) + m.group('text') + m.group(1)
-	else:
-		if len(m.group(1)) == 1:
-			return "\emph{%s}" % m.group('text')
-		else:
-			return "\strong{%s}" % m.group('text')
-
 class MarkdownToLatex:
 	def __init__(self):
-		self.emph = re.compile(r'((?P<type>(?P<escape>\\?)[\*_]){1,2})(?P<text>.+?)\1')
+		self.emph = re.compile(r'((?<!\\)[\*_])(?P<text>[^\\].*?)(\1)')
+		self.bold = re.compile(r'((\\{0}[\*_]){2})(?P<text>.+?)\1')
 		self.monospace = re.compile('`(?P<text>.+?)`')
 		self.chapter = re.compile('(?P<title>.+)\n=+', re.MULTILINE)
 		self.section = re.compile('(?P<title>.+)\n\-+$', re.MULTILINE)
@@ -46,7 +38,8 @@ class MarkdownToLatex:
 		self.reference = re.compile('(?P<type>[\^\!])?\[(?P<ref>.+?)\]\[(?P<id>.*?)\]')
 		
 	def _emphasise(self, text):
-		text = self.emph.sub(_emph, text)
+		text = self.bold.sub(lambda m: "\\strong{%s}" % m.group('text'), text)
+		text = self.emph.sub(lambda m: "\\emph{%s}" % m.group('text'), text)
 		text = self.monospace.sub(lambda m: "\\texttt{%s}" % m.group('text'), text)
 		return text
 	
@@ -153,7 +146,7 @@ class MarkdownToLatex:
 		return text
 		
 if __name__ == "__main__":
-	f = open('example.md')
-	d = f.read()
-	f.close()
+	with open('example.md') as f:
+		d = f.read()
 	print(MarkdownToLatex().markdownify(d))
+	
