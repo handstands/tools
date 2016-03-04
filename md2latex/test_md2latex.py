@@ -28,12 +28,12 @@ class Emphasis(unittest.TestCase):
 		
 	def testDoubleEmphasis(self):
 		"""_emphasise should bold text between double * or double __"""
-		tests = [("**bolded**", "\strong{bolded}"), ('__bolded__', "\strong{bolded}")]
+		tests = [("**bolded**", "\\textbf{bolded}"), ('__bolded__', "\\textbf{bolded}")]
 		for test, result in tests:
 			self.assertEqual(MarkdownToLatex()._emphasise(test), result)
 	
 	def testMultipleEmphasised(self):
-		tests = [("*a* *b*", "\emph{a} \emph{b}"), ("**a** **b**", "\strong{a} \strong{b}"), ("*a* **b**", "\emph{a} \strong{b}"), ("**a** *b*", "\strong{a} \emph{b}")]
+		tests = [("*a* *b*", "\emph{a} \emph{b}"), ("**a** **b**", "\\textbf{a} \\textbf{b}"), ("*a* **b**", "\emph{a} \\textbf{b}"), ("**a** *b*", "\\textbf{a} \emph{b}")]
 		"""_emphasise should emphasise multiple emphasised word in a single line correctly"""
 		for test, result in tests:
 			self.assertEqual(MarkdownToLatex()._emphasise(test), result)

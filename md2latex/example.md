@@ -30,7 +30,7 @@ Text between one asterisk or underscore will be *emphasised* _like_ *this*. Betw
 
 Unlike regular Markdown, footnotes are supported also^(this will be a footnote!). \*not emphasised\*
 
-Inline use of images is also supported: ![test](/test/test.jpg "A Test image"). That is as long as the requisite `graphicx` package is include when rendering the outputted LaTeX. Due to the nature of it's intended output, the script disregards the Alt Text attribute. If an optional title is set, it will be processed and included as a caption. Reference-style images are supported as well. Define them somewhere in the document and include them with the usual syntax ![test_image][] and it'll work just like the other way of including them.
+Inline use of images is also supported: ![test](./test.jpg "A Test image"). That is as long as the requisite `graphicx` package is include when rendering the outputted LaTeX. Due to the nature of it's intended output, the script disregards the Alt Text attribute. If an optional title is set, it will be processed and included as a caption. Reference-style images are supported as well. Define them somewhere in the document and include them with the usual syntax ![test_image][] and it'll work just like the other way of including them.
 
 Similarly hyperlinks are supported. Be sure to include the `hyperref` preamble somewhere in the LaTeX header. Both inline [description](http://description.net) without and with [test](http://test.org "Testing") are supported. Again, due to the nature of LaTex versus HTML, only one of either the description and title can be shown. As only the description is required to be there, this will be used. Reference style hyperlinks are supported similarly. Visit [google][] for searching and all that jazz.
 
@@ -41,4 +41,4 @@ To cite them use ^[referenceid][]. By default it will replace it with the long f
 
 [smith2008]: "Smith, Jane. *An example publication: long titles are long and much more*. New York: Imaginary Publishers, 2008." "Jane Smith, *An example publication: long titles are and much more* (New York: Imaginary Publishers, 2008)" "Smith, *An example publication*"
 [google]: <www.google.com> "Google"
-[test_image]: /path/to/image.jpg "An example image"
+[test_image]: ./test.jpg "An example image"
