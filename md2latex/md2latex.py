@@ -36,6 +36,7 @@ class MarkdownToLatex:
 		self.url = re.compile('\[(?P<ref>\S+?)\]:\s+\<?(?P<url>\S+?)\>?\s+"(?P<desc>.+?)"')
 		self.inline_reference = re.compile('(?P<image>\!)?\[(?P<alt>.+?)\]\s*\((?P<address>.+?)\s*(?:"(?P<title>.+?)")?\)')
 		self.reference = re.compile('(?P<type>[\^\!])?\[(?P<ref>.+?)\]\[(?P<id>.*?)\]')
+		self.quote = re.compile('\s*>\s+(?P<text>.+)')
 		
 	def _emphasise(self, text):
 		text = self.bold.sub(lambda m: "\\strong{%s}" % m.group('text'), text)
@@ -136,6 +137,25 @@ class MarkdownToLatex:
 					line = self.reference.sub(r"\\href{%s}{%s}" % urls[reference.group('ref')] , line)
 			result.append(line)
 		return '\n'.join(result)
+
+	def _quotes(self, text):
+		results = []
+		active_block = False
+		for line in text.splitlines():
+			quote = self.quote.search(line)
+			if quote:
+				if not active_block:
+					results.append('\\begin{quote}')
+					active_block = True
+				line = self.quote.sub(lambda m: m.group('text'), line)
+			else:
+				if active_block:
+					results.append('\end{quote}')
+					active_block = False
+			results.append(line)
+		if active_block:
+			results.append('\end{quote}')
+		return '\n'.join(results)
 	
 	def markdownify(self, text):
 		text = self._headings(text)

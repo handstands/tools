@@ -214,5 +214,18 @@ class References(unittest.TestCase):
 		test = 'Read ^[smith][wrong].\n[smith]: "Smith, Jane. *Long titles*, Somewhere: i Press, 2016." "Jane Smith, *Long titles* (Somewhere: i Press, 2016)" "Smith, *Long titles*"'
 		self.assertRaises(KeyError, MarkdownToLatex()._references, test)
 		
+class Quotes(unittest.TestCase):
+	def testBasicQuotation(self):
+		"""_quotes should return a properly formatted quotation"""
+		tests = [("> quotation", "\\begin{quote}\nquotation\n\end{quote}"), ("> quote\n> quote", "\\begin{quote}\nquote\nquote\n\end{quote}")]
+		for test, result in tests:
+			self.assertEqual(MarkdownToLatex()._quotes(test), result)
+
+	def testUnmodified(self):
+		"""_quotes should not modify non-matching content"""
+		test = "no quote here"
+		result = MarkdownToLatex()._quotes(test)
+		self.assertEqual(result, test)
+
 if __name__ == "__main__":
 	unittest.main()
