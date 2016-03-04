@@ -69,6 +69,13 @@ class MarkdownToLatex:
 					result.append(self.ul.sub(lambda m: "\item %s" % m.group('text').strip(), line))
 				elif ordered:
 					result.append(self.ol.sub(lambda m: "\item %s" % m.group('text').strip(), line))
+					
+			elif line.startswith("\t"):
+				result[-1] += " " + line[1:]
+			elif line.startswith("    "):
+				result[-1] += line[3:]
+			elif line == "":
+				result[-1] += "\\\\"
 			else:
 				if active_list:
 					result.append(end[active_list])
@@ -169,4 +176,3 @@ if __name__ == "__main__":
 	with open('example.md') as f:
 		d = f.read()
 	print(MarkdownToLatex().markdownify(d))
-	

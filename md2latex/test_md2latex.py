@@ -131,6 +131,16 @@ class Lists(unittest.TestCase):
 		"""_lists should not gobble up asteriskses used for emphasis"""
 		result = MarkdownToLatex()._lists('*test*')
 		self.assertNotEqual(result, "\item test*")
+		
+	def testHandwrappedLists(self):
+		"""_lists should handle hard wrapped lists properly"""
+		test = ("* List item\n\tconsisting\n    of multiple hardwrapped lines", "\\begin{itemize}\n\item List item consisting of multiple hardwrapped lines\n\end{itemize}")
+		self.assertEqual(MarkdownToLatex()._lists(test[0]), test[1])
+		
+	def testMultiParagraphList(self):
+		"""_lists should handle list items consisting of multiple paragraphs correctly"""
+		test = ("* List item\n\n\tof two paragraphs\n* Another\n\n    one", "\\begin{itemize}\n\item List item\\\\ of two paragraphs\n\item Another\\\\ one\n\end{itemize}")
+		self.assertEqual(MarkdownToLatex()._lists(test[0]), test[1])
 
 class Footnotes(unittest.TestCase):
 	def testFootnote(self):
